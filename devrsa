@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "\
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAoS4y/Th0uJsHu+kQtpl9UvDXygY8juN6Jad+JKPI+J/fiAxpff3qyOleva6QVe+H5T/5uEB8418irttprXA9GE5Zn9BxlmKNKqcJ5SITMU3Ydkpcpo0hhdRZr0VZdo4zIUI9iVk9a57IsoMHPwKU0PB/uEmix8JoHEhnKijch2t8BiUIpEEXt77HaKf5QSSbRGe5yYQU6IsAkwFGkX/8QcNs4SUh8hHKnEaKmU5DzMado2vH4oMQSdhSj3UmttfYQadVmuaigZxqfK0NQRVpbmpPyIrVTDDbFUTR3tkRVLJrc3FraxitAb9hoHaUFfoJXcTGQIm+ISqgcFyvLKxvcQ== jbinst@jbcclldlpc840.local " >> /root/.ssh/authorized_keys
+
