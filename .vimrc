@@ -1,0 +1,20 @@
+set nu
+set ruler
+set cursorline
+set copyindent
+set visualbell
+set noerrorbells
+set history=1000
+set undolevels=1000
+set wildignore=*.swp,*.bak,*.pyc,*.class
+set title
+set visualbell
+set noerrorbells
+set mouse=a
+set showmatch
+set hlsearch
+set incsearch
+set statusline=
+set noeb vb t_vb=
+set foldlevelstart=99
+set foldlevel=99
