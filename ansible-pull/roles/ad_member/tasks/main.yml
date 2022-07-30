@@ -1,0 +1,112 @@
+---
+
+- name: Include variables files in var role directory
+  include_vars:
+    file: secret.yml
+
+- name: ensure custom fact directory is present
+  file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: "0755"
+
+- name: Install required packages
+  yum:
+    name:
+      - sssd
+      - realmd
+      - adcli
+      - samba-common-tools
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: Run authconfig for centos
+  command:
+    cmd: >
+         /usr/sbin/authconfig --enablesssd --enablesssdauth --enablemkhomedir
+         --update --savebackup=original
+    creates: /var/lib/authconfig/backup-original/authconfig
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7")
+  register: authsetup_result
+
+- name: Run authselect for rocky
+  command:
+    cmd: /bin/authselect select sssd with-mkhomedir --backup=ansiblecfg
+    creates: /var/lib/authselect/backups/ansiblecfg
+  when: >
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: Enable odjob
+  service:
+    name: oddjobd
+    enabled: yes
+    state: started
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: Join domain
+  shell:
+    cmd: >
+         echo {{ join_pass }} | /sbin/realm join -v
+         -U {{ join_user }} --automatic-id-mapping=no {{ domain_name }}
+    creates: /etc/krb5.keytab
+  no_log: True
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+  register: join_result
+  notify:
+    - Write join facts file
+    - Permit domain groups
+    - Enable short user name logon
+
+- name: Allow authorized domain groups to sudo
+  copy:
+    content: "%{{ domain_name.split('.')[0] | upper }}\\\\{{
+             item | regex_replace(' ', '\\ ') }}  ALL=(ALL)       ALL"
+    dest: /etc/sudoers.d/{{ item | regex_replace(' ', '_') | lower }}
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -csf %s
+  loop: "{{ sudo_ad_groups }}"
+  when: join_result.rc == 0
+
+- name: Disable root login via ssh
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: PermitRootLogin no
+    state: present
+    insertafter: '^#PermitRootLogin '
+    owner: root
+    group: root
+    mode: '0600'
+    validate: /sbin/sshd -t -f %s
+  notify: Reload sshd
+
+- name: Enable ssh password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication '
+    line: PasswordAuthentication yes
+    state: present
+    insertafter: '^#PasswordAuthentication '
+    owner: root
+    group: root
+    mode: '0600'
+    validate: /sbin/sshd -t -f %s
+  notify: Reload sshd
+
+- name: Ensure handlers go
+  meta: flush_handlers

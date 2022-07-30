@@ -1,0 +1,33 @@
+---
+- name: Enable short user name logon
+  ini_file:
+    path: /etc/sssd/sssd.conf
+    section: "domain/{{ domain_name }}"
+    option: use_fully_qualified_names
+    value: 'False'
+  notify: Reload sssd
+
+- name: Reload sshd
+  service:
+    name: sshd
+    state: reloaded
+
+- name: Reload sssd
+  service:
+    name: sssd
+    state: restarted
+
+- name: Write join facts file
+  ini_file:
+    path: /etc/ansible/facts.d/adjoin.fact
+    section: realm
+    option: ad_domain_name
+    value: "{{ domain_name }}"
+    mode: "0644"
+  when: join_result.rc == 0
+
+- name: Permit domain groups
+  command:
+    cmd: /sbin/realm permit --realm="{{ domain_name }}" --groups "{{ item }}"
+  loop: "{{ permitted_groups }}"
+  when: join_result.rc == 0

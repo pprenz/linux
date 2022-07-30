@@ -1,0 +1,105 @@
+---
+# tasks file for managed_vm
+
+- name: Include variables files in var role directory
+  include_vars:
+    file: secret.yml
+
+- name: Remove surplus packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ surplus_packages }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Disable unused services for rhel 7
+  service:
+    name: "{{ item }}"
+    enabled: no
+  loop: "{{ unused_services }}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int == 7
+
+- name: Deploy CentOS-Base.repo template for centos 7
+  template:
+    src: CentOS-Base.repo.j2
+    dest: /etc/yum.repos.d/CentOS-Base.repo
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when:
+    - ansible_facts['distribution'] == "CentOS"
+    - ansible_distribution_major_version | int == 7
+
+- name: Deploy epel.repo template for rhel 7
+  template:
+    src: epel.repo.j2
+    dest:  /etc/yum.repos.d/epel.repo
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int == 7
+
+- name: Set correct automatic update utility vars (RHEL 8).
+  set_fact:
+    update_utility: dnf-automatic
+    update_service: dnf-automatic-install.timer
+    update_conf_path: /etc/dnf/automatic.conf
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int == 8
+
+- name: Set correct automatic update utility vars (RHEL 7).
+  set_fact:
+    update_utility: yum-cron
+    update_service: yum-cron
+    update_conf_path: /etc/yum/yum-cron.conf
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int == 7
+
+- name: Install automatic update utility.
+  package:
+    name: '{{ update_utility }}'
+    state: present
+
+- name: Ensure automatic update utility is running and enabled on boot.
+  service:
+    name: '{{ update_service }}'
+    state: started
+    enabled: true
+
+- name: Configure autoupdates.
+  lineinfile:
+    dest: '{{ update_conf_path }}'
+    regexp: '^apply_updates = .+'
+    line: 'apply_updates = yes'
+    mode: 0644
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int in [7, 8]
+
+- name: Download OMS log agent installer
+  get_url:
+    url: '{{ oms_release_url }}{{ oms_bundle }}'
+    dest: '/sbin/{{ oms_bundle }}'
+    mode: '0740'
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version | int in [7, 8]
+  notify: Install OMS
+
+- name: install dependency agent workaround for rocky 8
+  dnf:
+    name: 'https://sbyum.cloud.jetblue.com/pub/oms/dependency-agent.rpm'
+    disable_gpg_check: yes
+    state: present
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+    - ansible_facts['distribution_major_version'] == "8"
+  notify: enable dependency agent

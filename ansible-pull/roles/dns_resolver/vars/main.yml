@@ -1,0 +1,7 @@
+---
+# vars file for dns_resolver
+searchdomains:
+  - sw.b6.local
+  - b6.local
+nameservers:
+  - 172.20.250.5

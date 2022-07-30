@@ -1,0 +1,20 @@
+---
+- name: Provisioning Playbook
+  hosts: localhost 
+  become: true
+  roles:
+    - dns_resolver
+    - managed_vm
+    - chrony_agent
+    - ad_member
+    - tomcat_server
+
+  tasks:
+    - name: Add ansible user to sudoers
+      copy:
+        content: 'ani ALL=(ALL)	NOPASSWD:	ALL'
+        dest: /etc/sudoers.d/ani
+        owner: root
+        group: root
+        mode: '0440'
+        validate: /usr/sbin/visudo -csf %s

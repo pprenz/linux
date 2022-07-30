@@ -1,0 +1,66 @@
+---
+- name: Provision jbinst group
+  group:
+    name: jbinst 
+    #gid: 1000
+    state: present
+
+- name: Ensure tomcat directory is present
+  file:
+    path: /opt/datalex
+    state: directory
+    owner: jbinst 
+    group: jbinst 
+    mode: "0755"
+
+- name: Provision jbinst user
+  user:
+    name: jbinst 
+    #uid: 1000
+    group: jbinst 
+    state: present
+
+- name: Ensure tomcat directory is present
+  file:
+    path: /opt/datalex
+    state: directory
+    owner: jbinst 
+    group: jbinst 
+    mode: "0755"
+
+#- name: Copy SSH to user home directory
+#  copy:
+#    src: "{{ item.name }}_id_rsa_20.pub"
+#    dest: "/home/{{ item.name}}//{{ item.name }}_id_rsa_2048.pub"
+#    owner: "{{ item.name }}"
+#  with_items: "{{ users }}"
+
+
+#- name: Set tomcat conf file perms
+#  file:
+#    path: /opt/tomcat/conf
+#    recurse: true
+#    mode: "u=rwX,g=rwX,o="
+
+- name: Set tomcat directory owner permissions
+  file:
+    path: "/opt/datalex/"
+    recurse: true
+    mode: "u=rwX,g=rwX,o="
+
+- name: Provision tomcat systemd unit file
+  template:
+    src: tomcat.service.j2
+    dest: /etc/systemd/system/tomcat.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: >
+        ansible_facts['hostname'] == "localhost"
+
+- name: Provision jboss file
+  copy:
+    src: ./files/jboss
+    dest: /etc/rc.d/init.d/jboss
+    owner: root
+    group: root

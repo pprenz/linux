@@ -1,0 +1,25 @@
+# Systemd unit file for tomcat
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+Environment=JAVA_HOME=/usr/lib/jdk
+Environment=CATALINA_PID=/opt/datalex/tomcat/temp/tomcat.pid
+Environment=CATALINA_HOME=/opt/datalex/tomcat
+Environment=CATALINA_BASE=/opt/datalex/tomcat
+
+ExecStart=/opt/datalex/tomcat/bin/startup.sh
+ExecStop=/opt/datalex/tomcat/bin/shutdown
+
+User=jbinst
+Group=jbinst
+
+UMask=0007
+RestartSec=30
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

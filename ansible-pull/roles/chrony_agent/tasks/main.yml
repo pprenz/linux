@@ -1,0 +1,50 @@
+---
+# tasks file for chrony_agent
+
+- name: Ensure redundant ntp package is removed
+  yum:
+    name:
+      - ntp
+      - ntpdate
+    state: absent
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: Install required package
+  yum:
+    name: chrony
+    state: present
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: deploy chrony.conf template
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: reload chrony
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: enable chrony service
+  service:
+    name: chronyd
+    enabled: yes
+    state: started
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")

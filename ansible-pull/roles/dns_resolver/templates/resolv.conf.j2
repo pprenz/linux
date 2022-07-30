@@ -1,0 +1,5 @@
+# Maintained by Ansible
+search {{ searchdomains|join(' ') }}
+{% for host in nameservers %}
+nameserver {{host}}
+{% endfor %}

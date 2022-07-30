@@ -1,0 +1,14 @@
+---
+# vars file for managed_vm
+surplus_packages:
+  - cloud-init
+  - cloud-utils-growpart
+  - linux-firmware
+  - postfix
+unused_services:
+  - network
+oms_release_url: "https://sbyum.cloud.jetblue.com/pub/oms/"
+oms_bundle: omsagent-1.14.12-0.universal.x64.sh
+workspace_id: 42721aee-71ae-4147-bd3b-7be842138f14
+oms_domain: opinsights.azure.com
+yum_server_root_url: "https://sbyum.cloud.jetblue.com/pub"

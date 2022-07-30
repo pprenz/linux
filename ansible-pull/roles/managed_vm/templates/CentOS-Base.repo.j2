@@ -1,0 +1,16 @@
+# Maintained by Ansible
+# CentOS-Base.repo for JB sandbox
+#
+#
+[base]
+name=CentOS-$releasever - Base
+baseurl={{ yum_server_root_url }}/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#released updates 
+[updates]
+name=CentOS-$releasever - Updates
+baseurl={{ yum_server_root_url }}/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7

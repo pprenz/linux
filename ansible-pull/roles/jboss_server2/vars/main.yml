@@ -1,0 +1,7 @@
+---
+# vars file for tomcat_server
+tomcat_url: "https://sbyum.cloud.jetblue.com/pub/tomcat/apache-tomcat-8.5.66.tar.gz"
+catalina_Xms: "512M"
+catalina_Xmx: "1024M"
+tomcat_ports:
+  - 8080/tcp

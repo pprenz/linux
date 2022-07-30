@@ -1,0 +1,7 @@
+---
+# handlers file for jboss_server
+#
+- name: reload jboss
+  service:
+    name: jboss
+    state: restarted

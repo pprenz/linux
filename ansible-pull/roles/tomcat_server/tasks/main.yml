@@ -1,0 +1,82 @@
+---
+# tasks file for tomcat_server
+#
+- name: Install java
+  package:
+    name: java-1.8.0-openjdk
+    state: present
+
+- name: Provision tomcat group
+  group:
+    name: tomcat
+    state: present
+
+- name: Ensure tomcat directory is present
+  file:
+    path: /opt/tomcat
+    state: directory
+    group: tomcat
+    mode: "0755"
+
+- name: Provision tomcat user
+  user:
+    name: tomcat
+    shell: /bin/nologin
+    home: /opt/tomcat
+    group: tomcat
+    state: present
+
+- name: Unarchive tomcat
+  unarchive:
+    src: "{{ tomcat_url }}"
+    dest: /opt/tomcat
+    remote_src: true
+    creates: /opt/tomcat/README.md
+    extra_opts:
+      - --strip-components=1
+
+- name: Set tomcat directory tree group
+  file:
+    path: /opt/tomcat
+    recurse: true
+    group: tomcat
+
+- name: Set tomcat conf file perms
+  file:
+    path: /opt/tomcat/conf
+    recurse: true
+    mode: "u=rwX,g=rwX,o="
+
+- name: Set tomcat directory owner permissions
+  file:
+    path: "/opt/tomcat/{{ item }}"
+    recurse: true
+    mode: "u=rwX,g=rwX,o="
+  loop:
+    - webapps
+    - work
+    - temp
+    - logs
+
+- name: Provision systemd unit file
+  template:
+    src: tomcat.service.j2
+    dest: /etc/systemd/system/tomcat.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload tomcat
+
+- name: Enable tomcat service
+  service:
+    name: tomcat
+    enabled: true
+    state: started
+
+#- name: Permit traffic to tomcat ports
+#  ansible.posix.firewalld:
+    #port: "{{ item }}"
+#    permanent: true
+#    state: enabled
+#    immediate: true
+#  loop: "{{ tomcat_ports }}"

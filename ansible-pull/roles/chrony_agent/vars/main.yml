@@ -1,0 +1,4 @@
+---
+# vars file for chrony_agent
+refclock: refclock PHC /dev/ptp0 poll 3 dpoll -2 offset 0 stratum 2
+makestep: makestep 1.0 -1

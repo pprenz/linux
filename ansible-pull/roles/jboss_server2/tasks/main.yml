@@ -1,0 +1,82 @@
+---
+# tasks file for jboss_server
+#
+- name: Install java
+  package:
+    name: java-1.8.0-openjdk
+    state: present
+
+- name: Provision jboss group
+  group:
+    name: jboss
+    state: present
+
+- name: Ensure jboss directory is present
+  file:
+    path: /opt/jboss
+    state: directory
+    group: jboss
+    mode: "0755"
+
+- name: Provision jboss user
+  user:
+    name: jboss
+    shell: /bin/nologin
+    home: /opt/jboss
+    group: jboss
+    state: present
+
+- name: Unarchive jboss
+  unarchive:
+    src: "{{ jboss_url }}"
+    dest: /opt/jboss
+    remote_src: true
+    creates: /opt/jboss/README.md
+    extra_opts:
+      - --strip-components=1
+
+- name: Set jboss directory tree group
+  file:
+    path: /opt/jboss
+    recurse: true
+    group: jboss
+
+- name: Set jboss conf file perms
+  file:
+    path: /opt/jboss/conf
+    recurse: true
+    mode: "u=rwX,g=rwX,o="
+
+- name: Set jboss directory owner permissions
+  file:
+    path: "/opt/jboss/{{ item }}"
+    recurse: true
+    mode: "u=rwX,g=rwX,o="
+  loop:
+    - webapps
+    - work
+    - temp
+    - logs
+
+- name: Provision systemd unit file
+  template:
+    src: jboss.service.j2
+    dest: /etc/systemd/system/jboss.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload jboss
+
+- name: Enable jboss service
+  service:
+    name: jboss
+    enabled: true
+    state: started
+
+- name: Permit traffic to jboss ports
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop: "{{ jboss_ports }}"

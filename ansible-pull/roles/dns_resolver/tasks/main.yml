@@ -1,0 +1,38 @@
+---
+# tasks file for dns_resolver
+
+- name: make sure 'dns=none' is set in /etc/NetworkManager/NetworkManager.conf
+  ini_file:
+    path: /etc/NetworkManager/NetworkManager.conf
+    state: present
+    no_extra_spaces: yes
+    section: main
+    option: dns
+    value: none
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify:
+    - reload NetworkManager
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")
+
+- name: deploy resolv.conf template
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify:
+    - reload NetworkManager
+  when: >
+        (ansible_facts['distribution'] == "CentOS" and
+        ansible_facts['distribution_major_version'] == "7") or
+        (ansible_facts['distribution'] == "Rocky" and
+        ansible_facts['distribution_major_version'] == "8")

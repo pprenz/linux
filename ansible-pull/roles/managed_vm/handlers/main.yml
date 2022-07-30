@@ -1,0 +1,15 @@
+---
+# handlers file for managed_vm
+#
+- name: Install OMS
+  command:
+    cmd: >
+         /sbin/{{ oms_bundle }} --install
+         -w {{ workspace_id }} -s {{ workspace_key }} -d {{ oms_domain }}
+    creates: /opt/omi/bin/omiagent
+
+- name: enable dependency agent
+  service:
+    name: microsoft-dependency-agent
+    enabled: yes
+    state: started

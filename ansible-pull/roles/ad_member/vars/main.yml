@@ -1,0 +1,8 @@
+---
+join_user: djoiner
+domain_name: sw.b6.local
+permitted_groups:
+  - lnxusers
+  - lnxadmins
+sudo_ad_groups:
+  - lnxadmins

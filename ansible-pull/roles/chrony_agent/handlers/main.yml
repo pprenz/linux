@@ -1,0 +1,6 @@
+---
+# handlers file for chrony_agent
+- name: reload chrony
+  service:
+    name: chronyd
+    state: restarted

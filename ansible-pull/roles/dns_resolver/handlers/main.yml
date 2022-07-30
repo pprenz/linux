@@ -1,0 +1,7 @@
+---
+# handlers file for dns_resolver
+
+- name: reload NetworkManager
+  service:
+    name: NetworkManager
+    state: reloaded
